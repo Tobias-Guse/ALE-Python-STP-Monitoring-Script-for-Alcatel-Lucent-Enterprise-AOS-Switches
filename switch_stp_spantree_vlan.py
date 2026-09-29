@@ -19,7 +19,7 @@
 # to INFO level when the monitoring period is completed.
 #
 # Start:
-# python3 /flash/python/switch_stp_monitoring.py
+# python3 /flash/python/switch_stp_spantree_vlan.py
 #
 #!/usr/bin/python3
 
