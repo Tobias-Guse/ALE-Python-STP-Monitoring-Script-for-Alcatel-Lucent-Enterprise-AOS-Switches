@@ -1,4 +1,28 @@
+# Pyhton STP Monitoring Script
+#
+# Monitors STP activity for a configurable time period.
+# Detects:
+#   - Root Bridge changes
+#   - Count-To-Infinity (CTI) events
+#   - Priority Mismatch events
+#   - RSTP CTI activation events
+#
+# Collects:
+#   - VLAN statistics
+#   - Root Priority
+#   - Root MAC
+#   - Port statistics
+#   - Root Priority transitions
+#   - Root change timeline
+#
+# Generates a summary report and restores STP logging
+# to INFO level when the monitoring period is completed.
+#
+# Start:
+# python3 /flash/python/switch_stp_monitoring.py
+#
 #!/usr/bin/python3
+
 
 import os
 import re
@@ -9,7 +33,7 @@ from datetime import datetime
 LOGFILE = "/flash/stp_monitoring.log"
 SWLOG = "/flash/swlog_chassis1"
 
-RUNTIME = 600
+RUNTIME = 300
 POLL_INTERVAL = 10
 
 last_position = 0
@@ -290,33 +314,50 @@ def process_line(line):
         priority_mismatch_events += 1
 
     if "RSTP CTI Activation Message Sent" in line:
-
         rstp_cti_events += 1
 
     if "IN-BPDU-Root_Bridge_Priority" in line:
-
         p = re.search(
-
             r"IN-BPDU-Root_Bridge_Priority=([0-9]+).*Current Root_Bridge_Priority *=([0-9]+)",
-
             line
-
         )
 
         if p:
 
-            transition = (
-                p.group(2)
-                + " -> "
-                + p.group(1)
+            old_prio = p.group(2)
+            new_prio = p.group(1)
+
+            if vlan is None:
+
+                vlan = "unknown"
+
+            root_mac = vlan_stats.get(
+                vlan,
+                {}
+            ).get(
+                "root_mac",
+                "unknown"
             )
 
-            if transition not in priority_transitions:
+            bridge_id = "unknown"
 
-                priority_transitions.append(
-                    transition
+            if vlan in spantree_before:
+
+                bridge_id = spantree_before[vlan].get(
+                    "bridge_id",
+                    "unknown"
                 )
 
+            priority_transitions.append({
+
+                "time": timestamp(),
+                "vlan": vlan,
+                "old_priority": old_prio,
+                "new_priority": new_prio,
+                "root_mac": root_mac,
+                "bridge_id": bridge_id
+
+            })
     if "Bridge has become new Root" in line:
 
         m = re.search(
@@ -498,9 +539,45 @@ def print_summary():
     log("ROOT PRIORITY CHANGES")
     log("=" * 60)
 
-    for item in priority_transitions:
+    if len(priority_transitions) == 0:
 
-        log(item)
+        log("No priority changes detected")
+
+    else:
+
+        for item in priority_transitions:
+
+            log("")
+
+            log(
+                "Time       : %s"
+                % item["time"]
+            )
+
+            log(
+                "VLAN       : %s"
+                % item["vlan"]
+            )
+
+            log(
+                "Bridge ID  : %s"
+                % item["bridge_id"]
+            )
+
+            log(
+                "Priority   : %s -> %s"
+                % (
+                    item["old_priority"],
+                    item["new_priority"]
+                )
+            )
+
+            log(
+                "Root MAC   : %s"
+                % item["root_mac"]
+            )
+
+            log("-" * 60)
 
     log("")
     log("=" * 60)
