@@ -2,14 +2,14 @@ Python STP Monitoring Script for Alcatel-Lucent Enterprise AOS Switches
 
 Overview
 The STP Monitoring Script is designed to simplify the troubleshooting of Spanning Tree Protocol (STP) issues on Alcatel-Lucent Enterprise (AOS) switches.
-The script automatically enables STP debug logging, monitors STP-related events in real time, captures STP topology information before and after monitoring, and generates a detailed summary report to help identify Layer 2 instability, Root Bridge changes, and potential network loops.
+The script automatically enables STP debug logging, monitors STP-related events in real time, creating summary report to help identify Layer 2 instability, Root Bridge changes, and potential network loops.
 
 Features
 Enables STP debug logging automatically
 Monitors STP activity for a configurable time period
 Captures STP snapshots before and after monitoring
 Detects Root Bridge changes
-Detects Count-To-Infinity (CTI) events
+Detects STP events
 Detects Priority Mismatch events
 Detects RSTP CTI activation events
 Tracks Root Priority transitions
@@ -75,4 +75,3 @@ Observed Symptoms
 - Root Bridge Change
 - Count To Infinity
 - Priority Mismatch
-- RSTP CTI Activation
